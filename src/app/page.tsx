@@ -34,7 +34,6 @@ export default function Home() {
   const [isStarted, setIsStarted] = useState(false);
 
   const loadTranslator = useCallback((sourceLanguage: Language, targetLanguage: Language) => {
-    console.log('loading', sourceLanguage, targetLanguage);
     const speechConfig = SpeechTranslationConfig.fromSubscription(process.env.NEXT_PUBLIC_SPEECH_KEY || '', process.env.NEXT_PUBLIC_SPEECH_REGION || '');
     speechConfig.setProfanity(ProfanityOption.Masked);
     speechConfig.speechRecognitionLanguage = translationMap[sourceLanguage].stt;
@@ -47,16 +46,6 @@ export default function Home() {
       setSourceResult(event.result.text);
       setTargetResult(event.result.translations.get(translationMap[targetLanguage].t));
     }; 
-
-    recognizer.recognized = (_sender, event) => {
-      setTimeout(() => {
-        console.log('triggered', event.offset, sourceOffset);
-        if (event.offset === sourceOffset) {
-          setSourceResult('');
-          setTargetResult('');
-        }
-      }, timeout);
-    };
 
     setRecognizer(recognizer);
   }, []);
@@ -83,7 +72,6 @@ export default function Home() {
 
   const switchLanguage = useCallback((currentSourceLanguage: Language, currentTargetLanguage: Language) => {
     stopTranslation();
-    console.log('switching', currentSourceLanguage, currentTargetLanguage);
     const targetLanguage = currentSourceLanguage;
     setSourceLanguage(currentTargetLanguage);
     setTargetLanguage(targetLanguage);
