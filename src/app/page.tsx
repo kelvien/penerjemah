@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { AudioConfig, ProfanityOption, SpeechConfig, SpeechTranslationConfig, TranslationRecognizer } from "microsoft-cognitiveservices-speech-sdk";
-import { ArrowsRightLeftIcon, PlayIcon, StopIcon, SpeakerWaveIcon } from '@heroicons/react/20/solid'
+import { ArrowsRightLeftIcon, PlayIcon, StopIcon, SpeakerWaveIcon, SpeakerXMarkIcon } from '@heroicons/react/20/solid'
 
 const enum Language {
   EN = 0,
@@ -56,12 +56,6 @@ export default function Home() {
     loadTranslator(sourceLanguage, targetLanguage);
   }, []);
 
-  useEffect(() => {
-    if (!isStarted) {
-      loadTranslator(sourceLanguage, targetLanguage);
-    }
-  }, [isStarted]);
-
   const startTranslation = () => {
     recognizer?.startContinuousRecognitionAsync();
     setIsStarted(true);
@@ -98,11 +92,11 @@ export default function Home() {
       <a href="#" onClick={() => switchLanguage(sourceLanguage, targetLanguage)}><ArrowsRightLeftIcon className="h-4 w-4"/></a>
     </div>
     <main className="flex min-h-screen flex-col items-center justify-between content-around p-24">
-      <div className="result-box">
+      <div className="result-box mb-3">
         <div className="lang-box">
           <div className="flex items-center">
             <span>{translationMap[sourceLanguage].icon}</span>
-            <span className='ml-2'><SpeakerWaveIcon className="h-4 w-4" /></span>
+            <span className='ml-2'>{!isStarted ? <SpeakerXMarkIcon className="h-4 w-4" /> : <SpeakerWaveIcon className="h-4 w-4" />}</span>
           </div>
         </div>
         {sourceResult}
