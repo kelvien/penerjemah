@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react';
-import { AudioConfig, PhraseListGrammar, ProfanityOption, SpeechTranslationConfig, TranslationRecognizer } from "microsoft-cognitiveservices-speech-sdk";
-import { ArrowsRightLeftIcon, PlayIcon, StopIcon, SpeakerWaveIcon } from '@heroicons/react/24/solid'
+import { AudioConfig, ProfanityOption, SpeechConfig, SpeechTranslationConfig, TranslationRecognizer } from "microsoft-cognitiveservices-speech-sdk";
+import { ArrowsRightLeftIcon, PlayIcon, StopIcon, SpeakerWaveIcon } from '@heroicons/react/20/solid'
 
 const enum Language {
   EN = 0,
@@ -32,51 +32,65 @@ export default function Home() {
   const [sourceResult, setSourceResult] = useState('');
   const [targetResult, setTargetResult] = useState('');
   const [isStarted, setIsStarted] = useState(false);
+  const [audioConfig, setAudioConfig] = useState<AudioConfig>();
+  const [speechConfig, setSpeechConfig] = useState<SpeechConfig>();
 
   const loadTranslator = useCallback((sourceLanguage: Language, targetLanguage: Language) => {
-    const speechConfig = SpeechTranslationConfig.fromSubscription(process.env.NEXT_PUBLIC_SPEECH_KEY || '', process.env.NEXT_PUBLIC_SPEECH_REGION || '');
-    speechConfig.setProfanity(ProfanityOption.Masked);
-    speechConfig.speechRecognitionLanguage = translationMap[sourceLanguage].stt;
-    speechConfig.addTargetLanguage(translationMap[targetLanguage].t);
-
-    const audioConfig = AudioConfig.fromDefaultMicrophoneInput();
-    const recognizer = new TranslationRecognizer(speechConfig, audioConfig);
-    recognizer.recognizing = (_sender, event) => {
+    const sc = SpeechTranslationConfig.fromSubscription(process.env.NEXT_PUBLIC_SPEECH_KEY || '', process.env.NEXT_PUBLIC_SPEECH_REGION || '');
+    sc.setProfanity(ProfanityOption.Masked);
+    sc.speechRecognitionLanguage = translationMap[sourceLanguage].stt;
+    sc.addTargetLanguage(translationMap[targetLanguage].t);
+    const ac = AudioConfig.fromDefaultMicrophoneInput();
+    const rec = new TranslationRecognizer(sc, audioConfig);
+    rec.recognizing = (_sender, event) => {
       setSourceOffset(event.offset);
       setSourceResult(event.result.text);
       setTargetResult(event.result.translations.get(translationMap[targetLanguage].t));
     }; 
-
-    setRecognizer(recognizer);
+    setRecognizer(rec);
+    setAudioConfig(ac);
+    setSpeechConfig(sc);
   }, []);
 
   useEffect(() => {
     loadTranslator(sourceLanguage, targetLanguage);
   }, []);
 
-  const startTranslation = useCallback(() => {
+  useEffect(() => {
+    if (!isStarted) {
+      loadTranslator(sourceLanguage, targetLanguage);
+    }
+  }, [isStarted]);
+
+  const startTranslation = () => {
     recognizer?.startContinuousRecognitionAsync();
     setIsStarted(true);
-  }, [recognizer]);
+  };
 
-  const stopTranslation = useCallback(() => {
-    recognizer?.stopContinuousRecognitionAsync();
-    recognizer?.close();
-    setIsStarted(false);
-  }, [recognizer]);
+  const stopTranslation = async () => {
+    audioConfig?.close();
+    speechConfig?.close();
+    recognizer?.stopContinuousRecognitionAsync(() => {
+      recognizer?.close(() => {
+        setIsStarted(false);
+      });
+    });
+    setRecognizer(undefined);
+    setAudioConfig(undefined);
+    setSpeechConfig(undefined);
+  };
 
   useEffect(() => {
     setSourceResult('');
     setTargetResult('');
   }, [isStarted]);
 
-  const switchLanguage = useCallback((currentSourceLanguage: Language, currentTargetLanguage: Language) => {
+  const switchLanguage = (currentSourceLanguage: Language, currentTargetLanguage: Language) => {
     stopTranslation();
-    const targetLanguage = currentSourceLanguage;
     setSourceLanguage(currentTargetLanguage);
-    setTargetLanguage(targetLanguage);
-    loadTranslator(currentTargetLanguage, targetLanguage);
-  }, []);
+    setTargetLanguage(currentSourceLanguage);
+    loadTranslator(currentTargetLanguage, currentSourceLanguage);
+  };
 
   return (<>
     <div className="flex justify-between">
