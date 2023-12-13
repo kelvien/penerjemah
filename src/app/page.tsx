@@ -94,8 +94,8 @@ export default function Home() {
 
   return (<>
     <div className="flex justify-between">
-      {!isStarted ? <a href="#" onClick={startTranslation}><PlayIcon className="h-6 w-6"/></a> : <a href="#" onClick={stopTranslation}><StopIcon className="h-6 w-6"/></a>}
-      <a href="#" onClick={() => switchLanguage(sourceLanguage, targetLanguage)}><ArrowsRightLeftIcon className="h-6 w-6"/></a>
+      {!isStarted ? <a href="#" onClick={startTranslation}><PlayIcon className="h-4 w-4"/></a> : <a href="#" onClick={stopTranslation}><StopIcon className="h-4 w-4"/></a>}
+      <a href="#" onClick={() => switchLanguage(sourceLanguage, targetLanguage)}><ArrowsRightLeftIcon className="h-4 w-4"/></a>
     </div>
     <main className="flex min-h-screen flex-col items-center justify-between content-around p-24">
       <div className="result-box">
